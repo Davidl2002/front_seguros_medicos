@@ -29,7 +29,7 @@ interface JwtPayload {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = 'https://back-seguros-medicos.onrender.com/api/auth';
   private tokenUserProfile = 'UserProfile';
   private tokenKey = 'jwtToken';
   private loggedIn = new BehaviorSubject<boolean>(false);

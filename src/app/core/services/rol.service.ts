@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   providedIn: 'root',
 })
 export class RolService {
-  private baseUrl = 'http://localhost:8080/api/roles';
+  private baseUrl = 'https://back-seguros-medicos.onrender.com/api/roles';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

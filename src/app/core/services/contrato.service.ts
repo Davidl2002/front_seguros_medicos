@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
   providedIn: 'root',
 })
 export class ContratoService {
-  private baseUrl = 'http://localhost:8080/api/contratos';
+  private baseUrl = 'https://back-seguros-medicos.onrender.com/api/contratos';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

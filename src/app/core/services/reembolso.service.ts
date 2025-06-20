@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   providedIn: 'root',
 })
 export class ReembolsoService {
-  private apiUrl = 'http://localhost:8080/api/reembolsos';
+  private apiUrl = 'https://back-seguros-medicos.onrender.com/api/reembolsos';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

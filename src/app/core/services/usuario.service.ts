@@ -17,7 +17,7 @@ export interface RegistroDTO {
   providedIn: 'root',
 })
 export class UsuarioService {
-  private baseUrl = 'http://localhost:8080/api/usuarios';
+  private baseUrl = 'https://back-seguros-medicos.onrender.com/api/usuarios';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

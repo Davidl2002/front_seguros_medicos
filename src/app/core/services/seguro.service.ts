@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
   providedIn: 'root',
 })
 export class SeguroService {
-  private baseUrl = 'http://localhost:8080/api/seguros';
+  private baseUrl = 'https://back-seguros-medicos.onrender.com/api/seguros';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

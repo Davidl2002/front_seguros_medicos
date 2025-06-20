@@ -8,7 +8,7 @@ import { Observable, tap } from 'rxjs';
   providedIn: 'root',
 })
 export class ClienteService {
-  private apiUrl = 'http://localhost:8080/api/clientes';
+  private apiUrl = 'https://back-seguros-medicos.onrender.com/clientes';
 
   constructor(private http: HttpClient) {}
 
