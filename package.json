@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:prod": "ng build --configuration production",
+    "build:prod": "ng build --configuration production --no-prerender",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:frontGestion": "node dist/front-gestion/server/server.mjs"
