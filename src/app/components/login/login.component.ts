@@ -41,18 +41,19 @@ onSubmit(): void {
       const perfil = this.authService.getUsuarioPerfil();
 
       if (!perfil) {
-        this.errorMessage = 'No se pudo obtener el perfil de usuario';
+        this.errorMessage = 'No se pudo obtener el perfil del usuario';
         return;
       }
 
       const roles = perfil.roles;
 
-      if (roles.includes('ADMIN') || roles.includes('AGENTE')) {
-        this.router.navigate(['/home']);
-      } else if (roles.includes('CLIENTE')) {
+      // Redirigir según el rol
+      if (roles.includes('CLIENTE')) {
         this.router.navigate(['/contratos']);
+      } else if (roles.includes('ADMIN') || roles.includes('AGENTE')) {
+        this.router.navigate(['/home']);
       } else {
-        this.errorMessage = 'Rol no autorizado';
+        this.errorMessage = 'Rol desconocido o no autorizado';
       }
     },
     error: () => {
