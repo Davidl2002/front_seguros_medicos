@@ -50,9 +50,9 @@ onSubmit(): void {
         const roles = perfil.roles;
 
         // Redirigir según el rol
-        if (roles.includes('CLIENTE')) {
+        if (roles.includes('ROLE_CLIENTE')) {
           this.router.navigate(['/contratos']);
-        } else if (roles.includes('ADMIN') || roles.includes('AGENTE')) {
+        } else if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_AGENTE')) {
           this.router.navigate(['/home']);
         } else {
           this.errorMessage = 'Rol desconocido o no autorizado';
