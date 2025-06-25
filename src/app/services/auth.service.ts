@@ -29,7 +29,7 @@ interface JwtPayload {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'https://back-seguros-medicos.onrender.com/api/auth';
+  private apiUrl = 'http://localhost:8080/api/auth';
   private tokenUserProfile = 'UserProfile';
   private tokenKey = 'jwtToken';
   private loggedIn = new BehaviorSubject<boolean>(false);
@@ -70,12 +70,6 @@ export class AuthService {
       );
   }
 
-  getUser(): Observable<UserProfile | null> {
-  const perfil = this.getUsuarioPerfil();
-  return new BehaviorSubject(perfil).asObservable();
-}
-
-
   // Logout method
   logout(): void {
     if (this.isBrowser()) {
@@ -94,12 +88,18 @@ export class AuthService {
   isLoggedIn(): Observable<boolean> {
     return this.loggedIn.asObservable();
   }
-
-  // Generate Authorization header with token
-  getAuthHeaders(): HttpHeaders {
-    const token = this.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token ?? ''}`);
+  
+// auth.service.ts
+getAuthHeaders(): HttpHeaders {
+  const token = this.getToken(); // Asume que tienes un método para obtener el token
+  if (!token) {
+    throw new Error('No authentication token available');
   }
+  
+  return new HttpHeaders({
+    'Authorization': `Bearer ${token}`
+  });
+}
 
   // Get user ID from decoded JWT
   getUsuarioId(): number {

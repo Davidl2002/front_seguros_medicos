@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 
 export interface IMenu {
   title: string;
-  url: string;
+  url?: string;
   icon: string;
+  children?: IMenu[];
 }
 
 @Injectable({
@@ -17,11 +18,53 @@ export class MenuService {
     { title: 'Contratos', url: '/contratos', icon: 'description' },
     { title: 'Clientes', url: '/clientes', icon: 'people' },
     { title: 'Reembolsos', url: '/reembolsos/pendientes', icon: 'receipt' },
+    { title: 'Depositos', url: '/depositos', icon: 'money' },
+    {
+      title: 'Reportes',
+      icon: 'bar_chart',
+      children: [
+        {
+          title: 'Reporte general',
+          url: '/reportes/dashboard-reportes',
+          icon: 'bar_chart',
+        },
+        {
+          title: 'Seguros Impagos',
+          url: '/reportes/seguros-impagos',
+          icon: 'payment',
+        },
+        {
+          title: 'Contratos por Cliente',
+          url: '/reportes/contratos-por-cliente',
+          icon: 'assignment_ind',
+        },
+        {
+          title: 'Reembolsos Pendientes',
+          url: '/reportes/reembolsos-pendientes',
+          icon: 'pending_actions',
+        },
+        {
+          title: 'Contratos Vencidos',
+          url: '/reportes/contratos-vencidos',
+          icon: 'event_busy',
+        },
+        {
+          title: 'Contratos por Vencer',
+          url: '/reportes/contratos-por-vencer',
+          icon: 'event_note',
+        },
+      ],
+    },
   ];
 
   private clienteMenu: IMenu[] = [
     { title: 'Inicio', url: '/home', icon: 'home' },
-    { title: 'Mis Contratos', url: '/mis-contratos', icon: 'assignment' },
+    { title: 'Mis Contratos', url: '/contratos', icon: 'assignment' },
+        {
+      title: 'Realizar Pagos',
+      url: '/pagos',
+      icon: 'money',
+    },
     {
       title: 'Pedir Reembolso',
       url: '/reembolsos/crear',
@@ -34,22 +77,11 @@ export class MenuService {
     switch (rol.toUpperCase()) {
       case 'ADMIN':
       case 'AGENTE':
-        return [...this.adminMenu];
+        return JSON.parse(JSON.stringify(this.adminMenu));
       case 'CLIENTE':
-        return [...this.clienteMenu];
+        return JSON.parse(JSON.stringify(this.clienteMenu));
       default:
         return [{ title: 'Inicio', url: '/home', icon: 'home' }];
     }
   }
-  getMenu(): IMenu[] {
-  // Por defecto asumimos ADMIN para los tests
-  return this.getMenuByRol('ADMIN');
-}
-
-getMenuByUrl(url: string): IMenu | undefined {
-  const normalizedUrl = url.toLowerCase();
-  const allMenus = [...this.adminMenu, ...this.clienteMenu];
-  return allMenus.find((item) => item.url.toLowerCase() === normalizedUrl);
-}
-
 }

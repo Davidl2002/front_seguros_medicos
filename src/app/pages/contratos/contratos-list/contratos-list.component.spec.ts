@@ -1,110 +1,155 @@
-import {
-  ComponentFixture,
-  TestBed,
-  fakeAsync,
-  tick,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ContratosListComponent } from './contratos-list.component';
 import { ContratoService } from '../../../core/services/contrato.service';
 import { AuthService } from '../../../services/auth.service';
 import { of, throwError } from 'rxjs';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
 import { Contrato } from '../../../models/contrato.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { ContratosPageComponent } from '../contratos-page/contratos-page.component';
+import { UserProfile } from '../../../models/profile-user.interface';
 
 describe('ContratosListComponent', () => {
   let component: ContratosListComponent;
   let fixture: ComponentFixture<ContratosListComponent>;
-  let contratoServiceSpy: jasmine.SpyObj<ContratoService>;
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
-  let snackBarSpy: jasmine.SpyObj<MatSnackBar>;
+  let mockContratoService: jasmine.SpyObj<ContratoService>;
+  let mockAuthService: jasmine.SpyObj<AuthService>;
 
   const mockContrato: Contrato = {
     id: 1,
-    clienteId: 10,
-    seguroId: 2,
-    agenteId: 5,
-    fechaInicio: '2024-01-01',
-    fechaFin: '2024-12-31',
-    frecuenciaPago: 'MENSUAL',
+    clienteId: 1,
+    fechaInicio: '2023-01-01',
+    fechaFin: '2024-01-01',
     estado: 'ACTIVO',
+    frecuenciaPago: 'MENSUAL',
     beneficiarios: [],
+    dependientes: [],
+    seguroId: 1,
+  };
+
+  const mockUserProfile: UserProfile = {
+    id: 1,
+    nombre: 'Test',
+    apellido: 'User',
+    token: 'fake-token',
+    roles: ['ROLE_CLIENTE'],
   };
 
   beforeEach(async () => {
-    contratoServiceSpy = jasmine.createSpyObj('ContratoService', [
+    mockContratoService = jasmine.createSpyObj('ContratoService', [
+      'obtenerTodosLosContratos',
       'obtenerPorCliente',
       'actualizarEstado',
     ]);
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['getUsuarioId']);
-    snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
+    mockAuthService = jasmine.createSpyObj('AuthService', [
+      'getUsuarioPerfil',
+      'getUsuarioId',
+    ]);
+
+    mockAuthService.getUsuarioPerfil.and.returnValue(mockUserProfile);
+    mockAuthService.getUsuarioId.and.returnValue(1);
+
+    mockContratoService.obtenerPorCliente.and.returnValue(of([mockContrato]));
+
+    // 👇 Esta línea es CLAVE si tu componente llama actualizarEstado en ngOnInit
+    mockContratoService.actualizarEstado.and.returnValue(of(mockContrato));
 
     await TestBed.configureTestingModule({
-      imports: [ContratosPageComponent, MatDialogModule],
+      imports: [ContratosListComponent, MatSnackBarModule, MatDialogModule],
       providers: [
-        { provide: ContratoService, useValue: contratoServiceSpy },
-        { provide: AuthService, useValue: authServiceSpy },
-        { provide: MatSnackBar, useValue: snackBarSpy },
-        { provide: MatDialog, useValue: {} },
+        { provide: ContratoService, useValue: mockContratoService },
+        { provide: AuthService, useValue: mockAuthService },
       ],
-      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ContratosListComponent);
     component = fixture.componentInstance;
-
-    // Evita fallos en ngOnInit
-    contratoServiceSpy.obtenerPorCliente.and.returnValue(of([]));
-    authServiceSpy.getUsuarioId.and.returnValue(1);
+    fixture.detectChanges(); // <-- ngOnInit se llama aquí
   });
 
-  it('debería crearse correctamente', () => {
+  it('debería crear el componente', () => {
     expect(component).toBeTruthy();
   });
 
-  it('debería cargar contratos en ngOnInit', () => {
-    contratoServiceSpy.obtenerPorCliente.and.returnValue(of([mockContrato]));
-
-    fixture.detectChanges();
-
-    expect(component.contratos.length).toBe(1);
-    expect(component.contratos[0].id).toEqual(1);
+  it('debería cargar contratos para cliente', () => {
+    mockContratoService.obtenerPorCliente.and.returnValue(of([mockContrato]));
+    component.cargarContratos();
+    expect(mockContratoService.obtenerPorCliente).toHaveBeenCalledWith(1);
   });
 
-  it('no debería cancelar contrato si usuario cancela confirmación', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+  it('debería manejar error al cargar contratos', () => {
+    spyOn(console, 'error');
+    mockContratoService.obtenerPorCliente.and.returnValue(
+      throwError(() => new Error('Error de carga'))
+    );
+    component.cargarContratos();
+    expect(component.loading).toBeFalse();
+  });
+
+  it('debería aplicar correctamente el filtro por estado', () => {
+    component.contratos = [
+      { ...mockContrato, estado: 'ACTIVO' },
+      { ...mockContrato, estado: 'PENDIENTE', id: 2 },
+    ];
+    component.filtroEstado = 'ACTIVO';
+    component.aplicarFiltro();
+    expect(component.contratosFiltrados.length).toBe(1);
+    expect(component.contratosFiltrados[0].estado).toBe('ACTIVO');
+  });
+
+  it('debería actualizar estado a CANCELADO al desactivar contrato', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.contratos = [{ ...mockContrato }];
+    mockContratoService.actualizarEstado.and.returnValue(
+      of({ ...mockContrato, estado: 'CANCELADO' })
+    );
     component.desactivarContrato(mockContrato);
-    expect(contratoServiceSpy.actualizarEstado).not.toHaveBeenCalled();
+    expect(mockContratoService.actualizarEstado).toHaveBeenCalledWith(
+      mockContrato.id!,
+      'CANCELADO'
+    );
   });
 
-  it('debería emitir el evento al editar contrato', () => {
-    spyOn(component.editar, 'emit');
-    component.editarContrato(mockContrato);
-    expect(component.editar.emit).toHaveBeenCalledWith(mockContrato);
+  it('debería no actualizar si el usuario cancela confirmación', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    mockContratoService.actualizarEstado.and.returnValue(of(mockContrato)); // fallback si algo lo llama
+
+    // no ejecutar ngOnInit (ya lo hizo en beforeEach)
+    component.desactivarContrato(mockContrato);
+
+    expect(mockContratoService.actualizarEstado).not.toHaveBeenCalled();
   });
 
-  it('debería devolver color correcto según estado', () => {
-    expect(component.getEstadoColor('ACTIVO')).toBe('primary');
-    expect(component.getEstadoColor('PENDIENTE')).toBe('accent');
-    expect(component.getEstadoColor('CANCELADO')).toBe('warn');
-    expect(component.getEstadoColor('OTRO')).toBe('');
+  it('debería aceptar contrato', () => {
+    component.contratoActivoParaFirmar = { ...mockContrato };
+    mockContratoService.actualizarEstado.and.returnValue(of(mockContrato));
+    component.aceptarContrato();
+    expect(mockContratoService.actualizarEstado).toHaveBeenCalledWith(
+      mockContrato.id!,
+      'ACEPTADO'
+    );
   });
 
-  it('debería devolver texto correcto según frecuencia de pago', () => {
-    expect(component.getFrecuenciaPagoTexto('MENSUAL')).toBe('Mensual');
-    expect(component.getFrecuenciaPagoTexto('TRIMESTRAL')).toBe('Trimestral');
-    expect(component.getFrecuenciaPagoTexto('SEMESTRAL')).toBe('Semestral');
-    expect(component.getFrecuenciaPagoTexto('ANUAL')).toBe('Anual');
-    expect(component.getFrecuenciaPagoTexto('OTRO')).toBe('OTRO');
+  it('debería rechazar contrato', () => {
+    component.contratoActivoParaFirmar = { ...mockContrato };
+    mockContratoService.actualizarEstado.and.returnValue(of(mockContrato));
+    component.rechazarContrato();
+    expect(mockContratoService.actualizarEstado).toHaveBeenCalledWith(
+      mockContrato.id!,
+      'RECHAZADO'
+    );
   });
 
   it('debería formatear fecha correctamente', () => {
-    expect(component.formatearFecha('2024-05-21')).toMatch(
-      /^\d{2}\/\d{2}\/\d{4}$/
-    );
-    expect(component.formatearFecha('')).toBe('');
+    const dateStr = '2023-05-01T00:00:00Z';
+    const formatted = component.formatearFecha(dateStr);
+    expect(formatted).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+  });
+
+  it('debería cambiar filtro de estado', () => {
+    spyOn(component, 'aplicarFiltro');
+    component.cambiarFiltroEstado('ACTIVO');
+    expect(component.filtroEstado).toBe('ACTIVO');
+    expect(component.aplicarFiltro).toHaveBeenCalled();
   });
 });

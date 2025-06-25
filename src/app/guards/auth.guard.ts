@@ -4,24 +4,17 @@ import { AuthService } from '../services/auth.service';
 import { map, take } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
-export const authGuard: CanActivateFn = (route, state): Observable<boolean> => {
+export const authGuard: CanActivateFn = (): Observable<boolean> => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const expectedRoles = route.data?.['roles'] as string[];
 
-  return authService.getUser().pipe(
+  return authService.isLoggedIn().pipe(
     take(1),
-    map((user) => {
-      const isLoggedIn = !!user;
+    map((isLoggedIn) => {
       if (!isLoggedIn) {
         router.navigate(['/login']);
         return false;
       }
-
-if (expectedRoles && !user.roles.some(role => expectedRoles.includes(role.toUpperCase()))) {
-  router.navigate(['/unauthorized']);
-  return false;
-}
       return true;
     })
   );
