@@ -46,9 +46,6 @@ export const routes: Routes = [
     component: ContratosPageComponent,
     canActivate: [authGuard],
   },
-
-   { path: 'clientes', redirectTo: 'contratos', pathMatch: 'full' },
-
   {
     path: 'clientes',
     component: ClientesListComponent,

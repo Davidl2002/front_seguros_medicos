@@ -33,18 +33,34 @@ export class LoginComponent {
     });
   }
 
-  onSubmit(): void {
-    if (this.loginForm.invalid) return;
+onSubmit(): void {
+  if (this.loginForm.invalid) return;
 
-    this.authService.login(this.loginForm.value).subscribe({
-      next: () => {
+  this.authService.login(this.loginForm.value).subscribe({
+    next: () => {
+      const perfil = this.authService.getUsuarioPerfil();
+
+      if (!perfil) {
+        this.errorMessage = 'No se pudo obtener el perfil de usuario';
+        return;
+      }
+
+      const roles = perfil.roles;
+
+      if (roles.includes('ADMIN') || roles.includes('AGENTE')) {
         this.router.navigate(['/home']);
-      },
-      error: () => {
-        this.errorMessage = 'Credenciales incorrectas';
-      },
-    });
-  }
+      } else if (roles.includes('CLIENTE')) {
+        this.router.navigate(['/contratos']);
+      } else {
+        this.errorMessage = 'Rol no autorizado';
+      }
+    },
+    error: () => {
+      this.errorMessage = 'Credenciales incorrectas';
+    },
+  });
+}
+
 
   get f() {
     return this.loginForm.controls;
