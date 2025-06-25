@@ -38,23 +38,26 @@ onSubmit(): void {
 
   this.authService.login(this.loginForm.value).subscribe({
     next: () => {
-      const perfil = this.authService.getUsuarioPerfil();
+      // Esperamos un poco para asegurarnos que el token fue guardado
+      setTimeout(() => {
+        const perfil = this.authService.getUsuarioPerfil();
 
-      if (!perfil) {
-        this.errorMessage = 'No se pudo obtener el perfil del usuario';
-        return;
-      }
+        if (!perfil || !perfil.roles) {
+          this.errorMessage = 'No se pudo obtener el perfil del usuario';
+          return;
+        }
 
-      const roles = perfil.roles;
+        const roles = perfil.roles;
 
-      // Redirigir según el rol
-      if (roles.includes('CLIENTE')) {
-        this.router.navigate(['/contratos']);
-      } else if (roles.includes('ADMIN') || roles.includes('AGENTE')) {
-        this.router.navigate(['/home']);
-      } else {
-        this.errorMessage = 'Rol desconocido o no autorizado';
-      }
+        // Redirigir según el rol
+        if (roles.includes('CLIENTE')) {
+          this.router.navigate(['/contratos']);
+        } else if (roles.includes('ADMIN') || roles.includes('AGENTE')) {
+          this.router.navigate(['/home']);
+        } else {
+          this.errorMessage = 'Rol desconocido o no autorizado';
+        }
+      }, 0); // Ejecuta en el siguiente ciclo del event loop
     },
     error: () => {
       this.errorMessage = 'Credenciales incorrectas';
